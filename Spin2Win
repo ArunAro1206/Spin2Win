@@ -1,0 +1,104 @@
+package Task;
+
+import java.util.*;
+
+public class Spin2Win {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        final List<String> spinNumbers = Arrays.asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+        final List<String> allowedBets = Arrays.asList("5", "10", "50", "100", "500");
+        final int MIN_BET = 5, MAX_BET = 10000;
+
+        System.out.println("🎰 Welcome to Spin 2 Win Pro 🎰");
+        System.out.println("Bet between these numbers: " + spinNumbers);
+        System.out.println("Allowed bet amounts: " + allowedBets);
+        System.out.println("Do you want to spin? (Y/N)");
+
+        Map<String, List<Integer>> betMap = new HashMap<>();
+
+        char option;
+        do {
+            System.out.print("Enter number to bet on (0–9, odd, even): ");
+            String spinChoice = sc.next().trim().toLowerCase();
+
+            System.out.print("Enter bet amount: ");
+            int betAmount;
+            try {
+                betAmount = Integer.parseInt(sc.next().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid amount. Try again.");
+                continue;
+            }
+
+            if (!allowedBets.contains(String.valueOf(betAmount))) {
+                System.out.println("Please use allowed bet amounts only: " + allowedBets);
+                continue;
+            }
+
+            betMap.putIfAbsent(spinChoice, new ArrayList<>());
+            betMap.get(spinChoice).add(betAmount);
+
+            System.out.print("Do you want to continue betting? (Y/N): ");
+            option = sc.next().trim().charAt(0);
+        } while (option == 'Y' || option == 'y');
+
+        // Calculate totals
+        int grandTotal = 0;
+        Map<String, Integer> totalBetPerNumber = new HashMap<>();
+
+        for (Map.Entry<String, List<Integer>> entry : betMap.entrySet()) {
+            int sum = entry.getValue().stream().mapToInt(Integer::intValue).sum();
+            totalBetPerNumber.put(entry.getKey(), sum);
+            grandTotal += sum;
+        }
+
+        System.out.println("\n🔢 Your Total Bets: " + totalBetPerNumber);
+        System.out.println("💰 Total Bet Amount: $" + grandTotal);
+
+        if (grandTotal < MIN_BET) {
+            System.out.println("Minimum total bet should be at least $" + MIN_BET);
+            return;
+        } else if (grandTotal > MAX_BET) {
+            System.out.println("Maximum total bet limit is $" + MAX_BET);
+            return;
+        }
+
+        // Spin the wheel
+        Random rand = new Random();
+        String spinResult = spinNumbers.get(rand.nextInt(spinNumbers.size()));
+        System.out.println("\n🎲 Spinning...");
+        System.out.println("🎉 Spin Result: " + spinResult);
+
+        // Check for win
+        int totalWinningAmount = 0;
+
+        // Exact match win
+        if (totalBetPerNumber.containsKey(spinResult)) {
+            int win = totalBetPerNumber.get(spinResult) * 9;
+            System.out.println("🎯 Direct match win on " + spinResult + ": $" + win);
+            totalWinningAmount += win;
+        }
+
+        // Odd/even win
+        int number = Integer.parseInt(spinResult);
+        if (number != 0) {
+            if (number % 2 == 0 && totalBetPerNumber.containsKey("even")) {
+                int win = totalBetPerNumber.get("even") * 9;
+                System.out.println("⚖️ Even win: $" + win);
+                totalWinningAmount += win;
+            } else if (number % 2 != 0 && totalBetPerNumber.containsKey("odd")) {
+                int win = totalBetPerNumber.get("odd") * 9;
+                System.out.println("⚖️ Odd win: $" + win);
+                totalWinningAmount += win;
+            }
+        }
+
+        if (totalWinningAmount > 0) {
+            System.out.println("🎊 Total Winning Amount: $" + totalWinningAmount);
+        } else {
+            System.out.println("😢 Sorry, no wins this round.");
+        }
+
+        sc.close();
+    }
+}
